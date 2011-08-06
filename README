@@ -1,0 +1,23 @@
+
+MetaBase (http://MetaDatabase.Org) was started in 2007 to serve as:
+
+    "... a user-contributed list of all the biological databases
+     available on the internet."
+
+
+As the number and quality of resources available continues to grow,
+this is seen as a vital objective.
+
+MetaBase has been implemented as a MediaWiki [1] instance, and uses
+Semantic MediaWiki [2] to organize data.
+
+This repo holds the code used to programmatically administer the wiki,
+and specifically to synchronize the content with the annual Nucleic
+Acids Research Database Issue (online Molecular Biology Database
+Collection) [3].
+
+
+
+[1] http://MediaWiki.Org
+[2] http://Semantic-MediaWiki.Org
+[3] http://www.google.com/q=Nucleic+Acids+Research+Database+Issue

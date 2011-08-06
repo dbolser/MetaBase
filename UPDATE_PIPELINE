@@ -1,0 +1,67 @@
+
+## This shell script is intended as a guideline for the steps needed
+## to update MetaBase to include the latest version of the NAR's
+## Molecular Biology Database collection [1]. It is only intended as a
+## usefull overview of the steps; each step should probably be run
+## manually.
+
+
+YEAR=2007
+YEAR=2008
+YEAR=2011
+
+
+## Step 1, download the webpages from NAR
+
+mkdir Scrape-${YEAR}
+
+
+
+## Until I can think of a better way, I blindly try to download every
+## possible database accession number.
+
+URL=http://www.oxfordjournals.org/nar/database/summary
+
+for ACCN_NO in `seq -w 1 1500`; do
+    #echo doing ${ACCN_NO}
+    
+    echo wget ${URL}/${ACCN_NO} \
+	--timestamping \
+	--output-document Scrape-${YEAR}/db_accn_${ACCN_NO}.html \
+	--append-output   Scrape-${YEAR}/wget-${YEAR}.log
+    
+    #break
+done \
+  > Scrape-${YEAR}/wget.${YEAR}.list
+
+wc -l Scrape-${YEAR}/wget.${YEAR}.list
+
+source Scrape-${YEAR}/wget.${YEAR}.list
+
+
+
+
+
+## Step 2, compare the list of databases in MetaBase with the list we
+## just downloaded.
+
+./get_titles_from_nar_html.plx \
+  Scrape-${YEAR}/db_accn_* \
+  1> titles_from_nar_html-${YEAR}.list \
+  2> titles_from_nar_html-${YEAR}.warnings
+
+
+
+
+
+
+
+
+
+
+
+
+
+## References
+
+# [1] Insert appropriate link to MB.
