@@ -59,6 +59,11 @@ find Scrape-${YEAR}/ -size 0 -exec rm {} \;
 
 ## 2011
 
+# HTML::Parse: Skipping unknown tag be
+Scrape-2011/db_accn_0844.html
+Scrape-2011/db_accn_1151.html 
+
+
 ## Missing address line
 mv Scrape-2011/db_accn_0069.html Scrape-2011/bad_db_accn_0069.html
 mv Scrape-2011/db_accn_0075.html Scrape-2011/bad_db_accn_0075.html
@@ -69,10 +74,6 @@ mv Scrape-2011/db_accn_1340.html Scrape-2011/bad_db_accn_1340.html
 
 ## Missing URL line
 mv Scrape-2011/db_accn_1160.html Scrape-2011/bad_db_accn_1160.html
-
-## Weird '.' after the URL
-Scrape-2011/db_accn_0521.html # Manually fixed.
-Scrape-2011/db_accn_0871.html # Manually fixed.
 
 ## URL isn't hyperlinked, unlike all the others
 Scrape-2011/db_accn_1293.html # Manually fixed.
