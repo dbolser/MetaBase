@@ -49,35 +49,14 @@ my $wc =
 
 
 # Parse the HTML text of a 'NAR Database page'. The function expects a
-# file handle and optionally a 'verbosity index' for debugging. It
+# file handle and optionally a 'verbose flag' for debugging. It
 # returns an array reference with various data elements taken from the
 # page. It does as much error checking as I could stomach. Note that
 # some pages fail the error checks!
 
 sub parseNarDatabaseHtml {
-  my $file = shift;
+  my $fh = shift;
   my $verbose = shift || 0;
-  
-  unless ($file =~ /db_accn_(\d{4})\.html$/){
-    warn "file not recognised: $file\n";
-    exit;
-  }
-  
-  my $id = $1;
-  
-  warn "doing $file ($id)\n"
-    if $verbose > 2;
-  
-  
-  
-  ## parse the NAR Database HTML
-  
-  my $fh;
-  
-  open $fh, $file
-    or die "cant open $file : $! \n";
-  
-  
   
   ## Watch out for logic!
   
@@ -127,7 +106,7 @@ sub parseNarDatabaseHtml {
       if (/^\<!-- start body --\>$/){
 	$bodyFlag = 1;
 	warn "body starting at $.\n"
-	  if $verbose > 0;
+	  if $verbose > 1;
       }
       else{
 	warn "IGNORING (1): -$_-\n"
@@ -151,7 +130,7 @@ sub parseNarDatabaseHtml {
 	$titleFlag = 1;
 	($dbTitle, $dbTitleCode) = parseTitle($1);
 	warn join("\t", "Title", $., $divCounter, $dbTitle), "\n"
-	  if $verbose > 0;
+	  if $verbose > 1;
       }
       else{
 	warn "IGNORING (2): -$_-\n"
@@ -168,7 +147,7 @@ sub parseNarDatabaseHtml {
 	$noFlag = 1;
 	$accnNo = $1;
 	warn join("\t", "No.", $., $divCounter, $accnNo), "\n"
-	  if $verbose > 0;
+	  if $verbose > 1;
       }
       else{
 	warn "IGNORING (3): -$_-\n"
@@ -191,7 +170,7 @@ sub parseNarDatabaseHtml {
 	      if $1 ne $2;
 	    push @url, $1;
 	    warn join("\t", "URL", $., $divCounter, $1), "\n"
-	      if $verbose > 0;
+	      if $verbose > 1;
 	  }
 	  else{
 	    die "WHAT2? : \"$_\"\n";
@@ -213,13 +192,13 @@ sub parseNarDatabaseHtml {
 	$authorFlag = 1;
 	$author = $1;
 	warn join("\t", "Auth", $., $divCounter, $author), "\n"
-	  if $verbose > 0;
+	  if $verbose > 1;
 	
 	next; # Done!
       }
       else{
 	# We should set the $authorFlag later when we are sure that it
-	# is missing.
+	# is missing so that we don't keep checking for it here.
 	warn "IGNORING (5): -$_-\n"
 	  if $verbose > 2;
       }
@@ -239,7 +218,7 @@ sub parseNarDatabaseHtml {
 	$authorAdrFlag = 1;
 	$authorAdr = $1;
 	warn join("\t", "Address", $., $divCounter, $authorAdr), "\n"
- 	  if $verbose > 0;
+ 	  if $verbose > 1;
       }
       else{
 	warn "IGNORING (6): -$_-\n"
@@ -263,7 +242,7 @@ sub parseNarDatabaseHtml {
  	      if $1 ne $2;
  	    push @contact, $1;
 	    warn join("\t", "Cont", $., $divCounter, $1), "\n"
- 	      if $verbose > 0;
+ 	      if $verbose > 1;
 	  }
 	  else{
  	    die "WHAT4? : \"$_\"\n";
@@ -285,7 +264,7 @@ sub parseNarDatabaseHtml {
       $H3Flag = 1;
       $H3 = $1;
       warn join("\t", "H3", $., $divCounter, $H3 ), "\n"
-	if $verbose > 0;
+	if $verbose > 1;
       next; # Flag set... We could apply some logic here (and above).
     }
     elsif ($H3Flag){
@@ -313,7 +292,7 @@ sub parseNarDatabaseHtml {
       my $catNo = $1;
       my $catId = $2;
       warn join("\t", "Cat", $., $divCounter, $catNo, $catId ), "\n"
-	if $verbose > 0;
+	if $verbose > 1;
       
       #die "double cat!\n" if defined($cat{$catNo});
       
@@ -327,7 +306,7 @@ sub parseNarDatabaseHtml {
       my $subCatNo = $2;
       my $subCatId = $3;
       warn join("\t", "SubCat", $., $divCounter, $subCatNo, $subCatId ), "\n"
-	if $verbose > 0;
+	if $verbose > 1;
       
       die "sucks!\n" unless defined($cat{$catNo});
       
@@ -345,7 +324,7 @@ sub parseNarDatabaseHtml {
 	$abstract = $1;
 	$abstractYear = $2;
 	warn join("\t", "Abst", $., $divCounter, $abstractYear, $abstract), "\n"
-	  if $verbose > 0;
+	  if $verbose > 1;
 	next; # Done
       }
     }
@@ -359,28 +338,25 @@ sub parseNarDatabaseHtml {
   
   
   
-  ## basic sanity check; does the file name match its contents...
-  &freakOut()
-    unless $id == $accnNo;
-  
-  ## Move this check into the parser?
+  ## Basic sanity check. Not that we really care about sections, but
+  ## tests for 'failed' parsing.
   unless (keys %H3){
-    die "no sections?\n"
+    die "$accnNo : no sections?\n"
   }
   
   
   
-  return [$dbTitle,	# The database title.
+  return [$dbTitle,	# The database Title.
 	  $dbTitleCode, # The database title code (if any).
-	  $accnNo,	# The database accession No.
+	  $accnNo,	# The database Accession No.
 	  \@url,	# The database URL(s).
 	  $author,	# The database author(s) (one line).
 	  $authorAdr,	# The author address(es) (one line).
 	  \@contact,	# The database contact email(s).
 	  \%H3,		# The H3 data.
 	  #
-	  \%cat,	# The database category data.
-	  \%subCat,	# The database sub-category data.
+	  \%cat,	# The category data.
+	  \%subCat,	# The sub-category data.
 	  #
 	  $abstract,	# Abstract URL.
 	  $abstractYear	# Abstract year.
@@ -388,36 +364,49 @@ sub parseNarDatabaseHtml {
 
 }
 
+
+
+
+
+## Look for a 'database code' in the database title.
+
 sub parseTitle {
   my $title = shift;
   
-  if($title =~ /^(.*) \((\S+)\)$/ ){
-    return($1, $2);
-  }
+  if(0){}
+  
   elsif($title =~ /^(\S+) - (.*)$/ ||
 	$title =~ /^(\S+): (.*)$/ ){
     return($2, $1);
   }
-  # The title does not appear to contain a database code.
-  return($title)
-}
   
+  elsif($title =~ /^(.*) \((\S+)\)$/ ){
+    return($1, $2);
+  }
+  
+  else{
+    # The title does not appear to contain a database code.
+    return($title)
+  }
+}
 
 
 
-
-
-
-
+## Remove some common HTML annoyances
 
 sub tidyHtmlForMediaWiki {
   my $text = shift;
   
   $text =~ s/<br \/>/\n\n/;
   
-  #$text =~ s/&reg;/®/g; # Feh!
-  $text =~ s/&reg;//g; # Feh!!
-
+  # Somhow this look ugly to me
+  #$text =~ s/&reg;/®/g;
+  #$text =~ s/&#174;/®/g;
+  
+  # So...
+  $text =~ s/&reg;//g;
+  $text =~ s/&#174;//g;
+  
   $text =~ s/&gt;/>/g;
   $text =~ s/&lt;/</g;
   $text =~ s/&amp;/&/g;
@@ -432,24 +421,41 @@ sub tidyHtmlForMediaWiki {
 
 
 
+
+
+## Tidy up the database title for mediawiki
+
 sub tidyTitleForMediaWiki {
   my $text = shift;
   
   # Remove HTML that we can't wikify in the title...
-  $text =~ s/<sup>(.*)<\/sup>/$1/;
+  $text =~ s/<sup>(.+)<\/sup>/$1/;
   $text =~ s/<\/?[iI]>//g;
   
-  #$text =~ s/&reg;/®/g; # Feh!
-  $text =~ s/&reg;//g; # Feh!!
-  $text =~ s/&eacute;/é/g;
+  # Somhow this look ugly to me
+  #$text =~ s/&reg;/®/g;
+  #$text =~ s/&#174;/®/g;
   
+  # So...
+  $text =~ s/&reg;//g;
+  $text =~ s/&#174;//g;
+  
+  # But...
+  $text =~ s/&eacute;/é/g;
+  $text =~ s/&#233;/é/g;
+  
+  # And...
+  $text =~ s/&#224;/à/g;
+
   die "WTF?\n$text\n"
     if
       $text =~ m/&\S+;/ ||
-	$text =~ m/<|>/;
+      $text =~ m/<|>/;
   
   return $text;
 }
+
+
 
 
 
@@ -489,7 +495,7 @@ sub getPage {
   my $mwApi = shift;
   
   warn "getting '$title'\n";
-
+  
   return $mwApi->get_page({ title => $title });
 }
 
@@ -614,7 +620,7 @@ sub getPageRevisions {
 
 
 
- 
+
 
 ## Sets to contents of the given page to the given text.
 
